@@ -30,9 +30,6 @@ spec:
       containers:
         - name: server
           image: reallyenglish/k8s-redis-ha-server:3.2.8
-          # command: ["ls","-lha","/etc/redis"]
-          # command: ["chmod","777","-R","/etc/redis"]
-          # command: ["redis-server", "/etc/redis/server.conf"]
           env:
           - name: SRV_NAME
             value: redis-ha
@@ -62,9 +59,6 @@ spec:
 
         - name: sentinel
           image: reallyenglish/k8s-redis-ha-sentinel:3.2.8
-          # command: ["ls","-lha","/etc/redis"]
-          # command: ["chmod","777","-R","/etc/redis"]
-          # command: ["redis-server", "/etc/redis/sentinel.conf", "--sentinel"]
           env:
           - name: SRV_NAME
             value: redis-ha

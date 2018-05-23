@@ -20,7 +20,7 @@ spec:
       serviceAccountName: storage-nfs-server-provisioner
       containers:
         - name: nfs-server-provisioner
-          image: quay.io/kubernetes_incubator/nfs-provisioner #:v1.0.9
+          image: quay.io/kubernetes_incubator/nfs-provisioner
           imagePullPolicy: IfNotPresent
           ports:
           - containerPort: 2049
