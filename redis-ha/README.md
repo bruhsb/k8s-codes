@@ -49,7 +49,7 @@ redis = Redis.new(
 
 ### Reference
 
-* [Fork of k8s-redis-ha by reallyenglish] (https://github.com/reallyenglish/k8s-redis-ha)
+* [Fork of k8s-redis-ha by reallyenglish](https://github.com/reallyenglish/k8s-redis-ha)
 * [Redis Replication](https://redis.io/topics/replication)
 * [Redis Sentinel Documentation](https://redis.io/topics/sentinel)
 * [Redis-rb sentinel support](https://github.com/redis/redis-rb#sentinel-support)
