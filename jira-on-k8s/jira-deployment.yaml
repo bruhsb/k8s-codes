@@ -1,0 +1,61 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: jira
+  name: jira-cloud
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: jira
+      name: jira
+    spec:
+      containers:
+        - name: cloudsql-proxy
+          image: gcr.io/cloudsql-docker/gce-proxy:1.11
+          command: ["/cloud_sql_proxy", "--dir=/cloudsql",
+                    "-instances=dynamic-nomad-186013:us-central1:bi=tcp:5432",
+                    "-credential_file=/secrets/cloudsql/credentials.json"]
+        # Pontos de Montagem
+          volumeMounts:
+            - name: cloudsql-instance-credentials
+              mountPath: /secrets/cloudsql
+              readOnly: true
+            - name: ssl-certs
+              mountPath: /etc/ssl/certs
+            - name: cloudsql
+              mountPath: /cloudsql
+
+        - name: jira
+          image: "gcr.io/dynamic-nomad-186013/jira-cloud:7.9.2"
+          resources:
+            requests:
+              # cpu: "2"
+              memory: "2.5G"
+          env:
+            - name: JIRA_HOME
+              value: "/opt/jira-home"
+          volumeMounts:
+            - name: "jira-data"
+              mountPath: /opt/jira-home
+      volumes:
+        - name: "jira-data"
+          persistentVolumeClaim:
+            claimName: jira-volume-claim
+
+  # Chaves de Autenticação junto ao Banco
+        - name: cloudsql-instance-credentials
+          secret:
+            secretName: cloudsql-instance-credentials
+        # Diretório Vázio para uso no Container - logs, cache e etc
+        - name: cloudsql
+          emptyDir:
+        # Certificados SSL
+        - name: ssl-certs
+          hostPath:
+            path: /etc/ssl/certs
+          # gcePersistentDisk:
+          #   pdName: jira-home
+          #   fsType: ext4
