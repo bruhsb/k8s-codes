@@ -1,0 +1,118 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  name: redis-ha
+spec:
+  ports:
+  - port: 6379
+    name: server
+  - port: 26379
+    name: sentinel
+  clusterIP: None
+  selector:
+    app: redis-ha
+---
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: redis-ha-statefulset
+spec:
+  serviceName: redis-ha
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: redis-ha
+
+    spec:
+      containers:
+        - name: server
+          image: reallyenglish/k8s-redis-ha-server:3.2.8
+          # command: ["ls","-lha","/etc/redis"]
+          # command: ["chmod","777","-R","/etc/redis"]
+          # command: ["redis-server", "/etc/redis/server.conf"]
+          env:
+          - name: SRV_NAME
+            value: redis-ha
+          - name: REDIS_DATA_DIR
+            value: /data
+          - name: REDIS_BIND_ADDRESS
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+
+          resources:
+            limits:
+              cpu: "100m"
+              memory: "200Mi"
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: "TCP"
+          volumeMounts:
+            - mountPath: /data
+              name: data
+              readOnly: false
+            - mountPath: /etc/redis/server.conf.template
+              subPath: server.conf.template
+              name: redis-config
+              readOnly: false
+
+        - name: sentinel
+          image: reallyenglish/k8s-redis-ha-sentinel:3.2.8
+          # command: ["ls","-lha","/etc/redis"]
+          # command: ["chmod","777","-R","/etc/redis"]
+          # command: ["redis-server", "/etc/redis/sentinel.conf", "--sentinel"]
+          env:
+          - name: SRV_NAME
+            value: redis-ha
+          - name: REDIS_MASTER_NAME
+            value: ha-master
+          - name: SENTINEL_QUORUM
+            value: "2"
+          - name: SENTINEL_BIND_ADDRESS
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          resources:
+            limits:
+              cpu: "100m"
+              memory: "200Mi"
+          ports:
+            - name: sentinel
+              containerPort: 26379
+              protocol: "TCP"
+          volumeMounts:
+            - mountPath: /etc/redis/sentinel.conf.template
+              name: sentinel-config
+              subPath: sentinel.conf.template
+
+
+      volumes:
+      - name: redis-config
+        configMap:
+          name: redis-config
+          defaultMode: 0777
+          items:
+            - key: redis-dot-conf
+              path: server.conf.template
+      - name: sentinel-config
+        configMap:
+          name: sentinel-config
+          defaultMode: 0777
+          items:
+            - key: sentinel-dot-conf
+              path: sentinel.conf.template
+
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+        - "ReadWriteOnce"
+      resources:
+        requests:
+          storage: 3Gi
+      storageClassName: nfs
