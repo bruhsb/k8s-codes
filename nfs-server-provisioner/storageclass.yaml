@@ -1,0 +1,8 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs
+  labels:
+    app: nfs-server-provisioner
+provisioner: cluster.local/storage-nfs-server-provisioner
+reclaimPolicy: Retain
