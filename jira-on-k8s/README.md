@@ -88,3 +88,7 @@ kubernetes   10.215.240.1     <none>            443/TCP    14d
 ```
 
 At this point you can visit Jira on http://XXX.XXX.XXX.XXX:80.
+
+## References
+
+Project forked of [Jira on kubernetes](https://github.com/kelseyhightower/jira-on-kubernetes)
